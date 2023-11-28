@@ -18,6 +18,7 @@ function doPost() {
 	const restMessage = '今日は【休薬期間】です。'; //休薬期間の朝のメッセージ
 	const takingMessage = '今日は【服薬期間】です。ピルを飲み忘れないように気をつけてください。'; //服薬期間の朝のメッセージ
 	const reminderMessage = 'ピル飲んだ？成否をこのメッセージにリアクションしてください。'; //夜のリマインドメッセージ
+	const lastReminderMessage = 'これが最後のリマインドです！もうピル飲んだ？'; //寝る前のリマインドメッセージ
 
 	// 休薬期間の初期定義（2023年11月13日）
 	// ここから7日間は休薬期間、それ以降の21日間は服薬期間
@@ -62,6 +63,11 @@ function doPost() {
 	else if (!isRestPeriod && hours >= 21 && hours <= 23) {
 		console.log("服薬期間で、時間が21時から23時の間なら、夜のリマインドメッセージを送信");
 		sendMessage(reminderMessage);
+	}
+	// 服薬期間で、時間が22時から24時の間なら、寝る前のリマインドメッセージを送信
+	else if (!isRestPeriod && hours >= 22 && hours <= 24) {
+		console.log("服薬期間で、時間が22時から24時の間なら、寝る前のリマインドメッセージを送信");
+		sendMessage(lastReminderMessage);
 	}
 }
 
