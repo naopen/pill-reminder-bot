@@ -61,7 +61,6 @@ function doPost() {
 	// 服薬期間で、時間が21時から23時の間なら、夜のリマインドメッセージを送信
 	else if (!isRestPeriod && hours >= 21 && hours <= 23) {
 		console.log("服薬期間で、時間が21時から23時の間なら、夜のリマインドメッセージを送信");
-		// メッセージの送信
 		sendMessage(reminderMessage);
 	}
 }
