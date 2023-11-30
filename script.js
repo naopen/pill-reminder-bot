@@ -17,6 +17,7 @@ function doPost() {
 	// メッセージを定義
 	const restMessage = '今日は【休薬期間】です。'; //休薬期間の朝のメッセージ
 	const takingMessage = '今日は【服薬期間】です。ピルを飲み忘れないように気をつけてください。'; //服薬期間の朝のメッセージ
+	const takingMessage2 = 'もし昨日飲み忘れてたら、いま飲んでねぇ'; //前日飲み忘れていた場合に今飲むように促すメッセージ
 	const reminderMessage = 'ピル飲んだ？成否をこのメッセージにリアクションしてください。'; //夜のリマインドメッセージ
 	const lastReminderMessage = 'これが最後のリマインドです！もうピル飲んだ？'; //寝る前のリマインドメッセージ
 
@@ -58,6 +59,7 @@ function doPost() {
 	else if (!isRestPeriod && hours >= 7 && hours <= 9) {
 		console.log("服薬期間で、時間が7時から9時の間なら、朝のメッセージを送信");
 		sendMessage(takingMessage);
+		sendMessage(takingMessage2);
 	}
 	// 服薬期間で、時間が21時から23時の間なら、夜のリマインドメッセージを送信
 	else if (!isRestPeriod && hours >= 21 && hours <= 23) {
