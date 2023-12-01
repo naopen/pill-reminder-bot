@@ -18,8 +18,8 @@ function doPost() {
 	const restMessage = '今日は【休薬期間】です。'; //休薬期間の朝のメッセージ
 	const takingMessage = '今日は【服薬期間】です。ピルを飲み忘れないように気をつけてください。'; //服薬期間の朝のメッセージ
 	const takingMessage2 = 'もし昨日飲み忘れてたら、いま飲んでねぇ'; //前日飲み忘れていた場合に今飲むように促すメッセージ
-	const reminderMessage = 'ピル飲んだ？成否をこのメッセージにリアクションしてください。'; //夜のリマインドメッセージ
-	const lastReminderMessage = 'これが最後のリマインドです！もうピル飲んだ？'; //寝る前のリマインドメッセージ
+	const reminderMessage = 'ピル飲んだ？'; //夜のリマインドメッセージ
+	const lastReminderMessage = 'これが最後のリマインドです！もうピル飲んだ？成否をこのメッセージにリアクションしてください。'; //寝る前のリマインドメッセージ
 
 	// 休薬期間の初期定義（2023年11月13日）
 	// ここから7日間は休薬期間、それ以降の21日間は服薬期間
@@ -29,7 +29,7 @@ function doPost() {
 	// 今日の日付オブジェクトを生成
 	const date = new Date();
 	// // 時刻を今日の22時に設定する（テスト用）
-	// date.setHours(22);
+	// date.setHours(23);
 	// date.setMinutes(0);
 	// // 日時を2024年1月8日に設定する（テスト用）
 	// date.setFullYear(2024);
