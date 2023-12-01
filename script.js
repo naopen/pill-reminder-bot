@@ -52,23 +52,22 @@ function doPost() {
 
 	// 休薬期間で、時間が7時から9時の間なら、朝のメッセージを送信
 	if (isRestPeriod && hours >= 7 && hours <= 9) {
-		console.log("休薬期間で、時間が7時から9時の間なら、朝のメッセージを送信");
-		sendMessage(restMessage);
+		console.log("休薬期間で、時間が午前7時から9時の間なら、朝のメッセージを送信");
 	}
 	// 服薬期間で、時間が7時から9時の間なら、朝のメッセージを送信
 	else if (!isRestPeriod && hours >= 7 && hours <= 9) {
-		console.log("服薬期間で、時間が7時から9時の間なら、朝のメッセージを送信");
+		console.log("服薬期間で、時間が午前7時から9時の間なら、朝のメッセージを送信");
 		sendMessage(takingMessage);
 		sendMessage(takingMessage2);
 	}
 	// 服薬期間で、時間が21時から23時の間なら、夜のリマインドメッセージを送信
-	else if (!isRestPeriod && hours >= 21 && hours <= 23) {
-		console.log("服薬期間で、時間が21時から23時の間なら、夜のリマインドメッセージを送信");
+	else if (!isRestPeriod && hours >= 22 && hours < 23) {
+		console.log("服薬期間で、時間が午後10時から11時の間なら、夜のリマインドメッセージを送信");
 		sendMessage(reminderMessage);
 	}
 	// 服薬期間で、時間が22時から24時の間なら、寝る前のリマインドメッセージを送信
-	else if (!isRestPeriod && hours >= 22 && hours <= 24) {
-		console.log("服薬期間で、時間が22時から24時の間なら、寝る前のリマインドメッセージを送信");
+	else if (!isRestPeriod && hours > 23 && hours <= 24) {
+		console.log("服薬期間で、時間が午後11時から12時の間なら、寝る前のリマインドメッセージを送信");
 		sendMessage(lastReminderMessage);
 	}
 }
