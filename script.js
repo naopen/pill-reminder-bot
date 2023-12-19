@@ -55,7 +55,7 @@ function doPost() {
 	let isTakingFirstDay = false;
 
 	// 服薬期間の初日かどうかを計算
-	if (!isRestPeriod && (restdays - 7) % 28 === 0) {
+	if (!isRestPeriod && (restDays - 7) % 28 === 0) {
 		isTakingFirstDay = true;
 	}
 	console.log('isTakingFirstDay:', isTakingFirstDay);
