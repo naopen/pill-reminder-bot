@@ -28,13 +28,13 @@ function doPost() {
 
 	// 今日の日付オブジェクトを生成
 	const date = new Date();
-	// // 時刻を今日の22時に設定する（テスト用）
-	// date.setHours(23);
+	// // 時刻を今日の8時に設定する（テスト用）
+	// date.setHours(8);
 	// date.setMinutes(0);
-	// // 日時を2024年1月8日に設定する（テスト用）
-	// date.setFullYear(2024);
-	// date.setMonth(1 - 1); // 1月は0から始まるため、1月を指定する場合は0を指定する
-	// date.setDate(8);
+	// // 日時を2023年12月18日に設定する（テスト用）
+	// date.setFullYear(2023);
+	// date.setMonth(12 - 1); // 1月は0から始まるため、1月を指定する場合は0を指定する
+	// date.setDate(18);
 
 	// 今日の時間を取得
 	const hours = date.getHours();
@@ -46,9 +46,19 @@ function doPost() {
 	// [4の倍数（1を含む）週] ならば休薬期間、そうでなければ服薬期間
 	const isRestPeriod = (restDaysDivided % 4) / 4 === 0 ? true : false;
 
+	console.log('restDays:', restDays);
 	console.log('restDaysDivided:', restDaysDivided);
 	console.log('isRestPeriod:', isRestPeriod);
 	console.log("日時：" + date.toLocaleString());
+
+	// 服薬期間の初日かどうかを判定するフラグ
+	let isTakingFirstDay = false;
+
+	// 服薬期間の初日かどうかを計算
+	if (!isRestPeriod && (restdays - 7) % 28 === 0) {
+		isTakingFirstDay = true;
+	}
+	console.log('isTakingFirstDay:', isTakingFirstDay);
 
 	// 休薬期間で、時間が7時から9時の間なら、朝のメッセージを送信
 	if (isRestPeriod && hours >= 7 && hours <= 9) {
@@ -59,7 +69,10 @@ function doPost() {
 	else if (!isRestPeriod && hours >= 7 && hours <= 9) {
 		console.log("服薬期間で、時間が午前7時から9時の間なら、朝のメッセージを送信");
 		sendMessage(takingMessage);
-		sendMessage(takingMessage2);
+		// もし服薬期間の初日でないなら、前日飲み忘れていた場合に今飲むように促すメッセージを送信
+		if (!isTakingFirstDay) {
+			sendMessage(takingMessage2);
+		}
 	}
 	// 服薬期間で、時間が21時から23時の間なら、夜のリマインドメッセージを送信
 	else if (!isRestPeriod && hours >= 22 && hours < 23) {
