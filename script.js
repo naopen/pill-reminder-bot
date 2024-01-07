@@ -37,7 +37,7 @@ function GetWeatherFunction(code) {
 
 	// メッセージを定義
 	let weatherMessage = weather + ' 、最高・最低気温は' + maxTemp + '℃/' + minTemp + '℃です。';
-	weatherMessage += '降水確率：12時 ' + rain_12 + '、18時 ' + rain_18 + '、24時 ' + rain_24;
+	weatherMessage += '降水確率：6-12時 ' + rain_12 + '、12-18時 ' + rain_18 + '、18-24時 ' + rain_24;
 
 	return weatherMessage;
 
