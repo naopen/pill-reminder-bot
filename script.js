@@ -17,7 +17,7 @@ function sendMessage(message) {
 }
 
 // 天気予報を取得する関数
-function getWeatherFunction(code) {
+function getWeather(code) {
 	const apiData = JSON.parse(UrlFetchApp.fetch('https://weather.tsukumijima.net/api/forecast/city/' + code).getContentText());
 	// weatherDataに今日の天気の配列を格納
 	const weatherDataToday = apiData.forecasts[0];
@@ -77,7 +77,7 @@ function doPost() {
 	console.log('isRestPeriod:', isRestPeriod);
 
 	// メッセージを定義
-	const dateMessage = '今日は' + date.getFullYear() + '年' + (date.getMonth() + 1) + '月' + date.getDate() + '日(' + dayList[date.getDay()] + ')、土浦の天気は ' + getWeatherFunction('080020') + ' です。';
+	const dateMessage = '今日は' + date.getFullYear() + '年' + (date.getMonth() + 1) + '月' + date.getDate() + '日(' + dayList[date.getDay()] + ')、土浦の天気は ' + getWeather('080020') + ' です。';
 	const restMessage = '【休薬期間】' + (elapsedDays % 7 + 1) + '日目'; //休薬期間の朝のメッセージ
 	const takingMessage = '【服薬期間】の' + (elapsedWeeks % 4) + '週目、' + (elapsedDays % 7 + 1) + '日目'; //服薬期間の朝のメッセージ
 	const takingMessage2 = 'もし昨日飲み忘れていた場合は、いま飲むようにしてください。'; //前日飲み忘れていた場合に今飲むように促すメッセージ
