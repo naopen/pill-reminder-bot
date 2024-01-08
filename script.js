@@ -20,23 +20,23 @@ function sendMessage(message) {
 function GetWeatherFunction(code) {
 	const apiData = JSON.parse(UrlFetchApp.fetch('https://weather.tsukumijima.net/api/forecast/city/' + code).getContentText());
 	// weatherDataに今日の天気の配列を格納
-	const weatherData = apiData.forecasts[0];
-	console.log(weatherData);
+	const weatherDataToday = apiData.forecasts[0];
+	const weatherDataTomorrow = apiData.forecasts[1];
 
 	// 今日の天気を取得
-	const weather = weatherData.telop;
+	const weather = weatherDataToday.telop;
 	// 今日の最高気温を取得
-	const maxTemp = weatherData.temperature.max.celsius;
-	// 今日の最低気温を取得
-	const minTemp = weatherData.temperature.min.celsius;
+	const maxTemp = weatherDataToday.temperature.max.celsius;
+	// 明日の最低気温を取得
+	const minTemp = weatherDataTomorrow.temperature.min.celsius;
 	// 今日の降水確率を取得
 	// const rain_06 = weatherData.chanceOfRain.T00_06;
-	const rain_12 = weatherData.chanceOfRain.T06_12;
-	const rain_18 = weatherData.chanceOfRain.T12_18;
-	const rain_24 = weatherData.chanceOfRain.T18_24;
+	const rain_12 = weatherDataToday.chanceOfRain.T06_12;
+	const rain_18 = weatherDataToday.chanceOfRain.T12_18;
+	const rain_24 = weatherDataToday.chanceOfRain.T18_24;
 
 	// メッセージを定義
-	let weatherMessage = weather + ' 、最高・最低気温は' + maxTemp + '℃/' + minTemp + '℃です。';
+	let weatherMessage = weather + ' 、今日の最高気温は ' + maxTemp + '℃ 、明日の最低気温は ' + minTemp + '℃ です。';
 	weatherMessage += '降水確率：6-12時 ' + rain_12 + '、12-18時 ' + rain_18 + '、18-24時 ' + rain_24;
 
 	return weatherMessage;
