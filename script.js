@@ -17,7 +17,7 @@ function sendMessage(message) {
 }
 
 // 天気予報を取得する関数
-function GetWeatherFunction(code) {
+function getWeatherFunction(code) {
 	const apiData = JSON.parse(UrlFetchApp.fetch('https://weather.tsukumijima.net/api/forecast/city/' + code).getContentText());
 	// weatherDataに今日の天気の配列を格納
 	const weatherDataToday = apiData.forecasts[0];
@@ -34,10 +34,11 @@ function GetWeatherFunction(code) {
 	const rain_12 = weatherDataToday.chanceOfRain.T06_12;
 	const rain_18 = weatherDataToday.chanceOfRain.T12_18;
 	const rain_24 = weatherDataToday.chanceOfRain.T18_24;
+	const rain_30 = weatherDataTomorrow.chanceOfRain.T00_06;
 
 	// メッセージを定義
 	let weatherMessage = weather + ' 、今日の最高気温は ' + maxTemp + '℃ 、明日の最低気温は ' + minTemp + '℃ です。';
-	weatherMessage += '降水確率：6-12時 ' + rain_12 + '、12-18時 ' + rain_18 + '、18-24時 ' + rain_24;
+	weatherMessage += '降水確率：6-12時 ' + rain_12 + '、12-18時 ' + rain_18 + '、18-24時 ' + rain_24 + '、24-30時 ' + rain_30 + 'です。';
 
 	return weatherMessage;
 
@@ -76,7 +77,7 @@ function doPost() {
 	console.log('isRestPeriod:', isRestPeriod);
 
 	// メッセージを定義
-	const dateMessage = '今日は' + date.getFullYear() + '年' + (date.getMonth() + 1) + '月' + date.getDate() + '日(' + dayList[date.getDay()] + ')、土浦の天気は ' + GetWeatherFunction('080020') + ' です。';
+	const dateMessage = '今日は' + date.getFullYear() + '年' + (date.getMonth() + 1) + '月' + date.getDate() + '日(' + dayList[date.getDay()] + ')、土浦の天気は ' + getWeatherFunction('080020') + ' です。';
 	const restMessage = '【休薬期間】' + (elapsedDays % 7 + 1) + '日目'; //休薬期間の朝のメッセージ
 	const takingMessage = '【服薬期間】の' + (elapsedWeeks % 4) + '週目、' + (elapsedDays % 7 + 1) + '日目'; //服薬期間の朝のメッセージ
 	const takingMessage2 = 'もし昨日飲み忘れていた場合は、いま飲むようにしてください。'; //前日飲み忘れていた場合に今飲むように促すメッセージ
