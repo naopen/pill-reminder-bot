@@ -1,17 +1,82 @@
-// 以下のコードは全てGoogle Apps Scriptで実行する
+// LINE Notifyのアクセストークン
 const token = 'LINE Notifyのアクセストークンを入力';
+// LINE Notify APIのURL
 const lineNotifyApi = 'https://notify-api.line.me/api/notify';
+
+// LINE Messaging API のアクセストークン
+const messagingApiToken = 'LINE Messaging APIのアクセストークンを入力';
+// 送信先のLINEグループID
+const groupId = 'LINEグループIDを入力';
+
+// デバッグ用日時設定
+// const debugDate = new Date('2024-07-28T22:00:00'); // 休薬期間の場合
+// const debugDate = new Date('2024-08-04T22:00:00'); // 服薬期間の場合
+const debugDate = null;
+
+// リマインドする時間（分）
+const REMINDER_MINUTES = 30;
+// 返信がない時に再度リマインドするまでの時間（分）
+const TIMEOUT_REMINDER_MINUTES = 20;
 
 // 曜日の配列
 const dayList = ["日", "月", "火", "水", "木", "金", "土"];
 
-// メッセージを送信する関数
-function sendMessage(message) {
-	// メッセージの送信設定
+function sendMorningMessage() {
+	// 現在の時刻またはデバッグ用日時を取得
+	const now = debugDate || new Date();
+
+	// メッセージを定義
+	const dateMessage = `今日は${now.getFullYear()}年${now.getMonth() + 1}月${now.getDate()}日(${dayList[now.getDay()]})、土浦の天気は${getWeather('080020')}`;
+
+	// 服薬期間判定
+	if (isTakingPeriod(now)) {
+		const elapsedDays = Math.floor((now - new Date(2023, 10, 13)) / (1000 * 60 * 60 * 24));
+		const elapsedWeeks = Math.floor(elapsedDays / 7);
+		const takingMessage = `【服薬期間】の${elapsedWeeks % 4}週目、${elapsedDays % 7 + 1}日目です。`;
+		sendLineNotify(dateMessage);
+		sendLineNotify(takingMessage);
+		// 服薬期間の初日でない場合は、追加メッセージを送信
+		if ((elapsedDays - 7) % 28 !== 0) {
+			const takingMessage2 = 'もし昨日飲み忘れていた場合は、いま飲むようにしてください。';
+			sendLineNotify(takingMessage2);
+		}
+	} else {
+		const elapsedDays = Math.floor((now - new Date(2023, 10, 13)) / (1000 * 60 * 60 * 24));
+		const restMessage = `【休薬期間】${elapsedDays % 7 + 1}日目です。`;
+		sendLineNotify(dateMessage);
+		sendLineNotify(restMessage);
+	}
+}
+
+function sendPillReminder() {
+	// 現在の時刻またはデバッグ用日時を取得
+	const now = debugDate || new Date();
+
+	// 服薬期間判定
+	if (!isTakingPeriod(now)) {
+		console.log("休薬期間のため、リマインドはスキップします。");
+		return;
+	}
+
+	// LINE Notifyでリマインドメッセージを送信
+	const message = 'ピルを飲む時間ですよ！';
+	sendLineNotify(message);
+
+	// 3秒後に確認メッセージを送信
+	Utilities.sleep(3000); // 3秒待機
+	sendConfirmationMessage();
+}
+
+// LINE Notifyでメッセージを送信
+function sendLineNotify(message) {
 	const options = {
-		"method": "post",
-		"payload": { "message": message },
-		"headers": { "Authorization": "Bearer " + token }
+		'method': 'post',
+		'headers': {
+			'Authorization': 'Bearer ' + token,
+		},
+		'payload': {
+			'message': message,
+		},
 	};
 	UrlFetchApp.fetch(lineNotifyApi, options);
 }
@@ -37,87 +102,138 @@ function getWeather(code) {
 	const rain_30 = weatherDataTomorrow.chanceOfRain.T00_06;
 
 	// メッセージを定義
-	let weatherMessage = weather + '、今日の最高気温：' + maxTemp + '℃ 、明日の最低気温：' + minTemp + '℃です。';
-	weatherMessage += '降水確率：6-12時 ' + rain_12 + '、12-18時 ' + rain_18 + '、18-24時 ' + rain_24 + '、24-30時 ' + rain_30 + ' です。';
+	let weatherMessage = `${weather}、今日の最高気温は${maxTemp}℃、明日の最低気温は${minTemp}℃です。`;
+	weatherMessage += `降水確率は、6-12時 ${rain_12}％、12-18時 ${rain_18}％、18-24時 ${rain_24}％、24-30時 ${rain_30}％ です。`;
 
 	return weatherMessage;
 
 }
 
-function doPost() {
-	// 休薬期間の初期定義（2023年11月13日）
-	// ここから7日間は休薬期間、それ以降の21日間は服薬期間
-	// これを繰り返す
-	const startDate = new Date(2023, 10, 13);
-
-	// 今日の日付オブジェクトを生成
-	const date = new Date();
-	// // 時刻を今日の8時に設定する（テスト用）
-	// date.setHours(8);
-	// date.setMinutes(0);
-	// // 日時を2023年12月18日に設定する（テスト用）
-	// date.setFullYear(2023);
-	// date.setMonth(12 - 1); // 1月は0から始まるため、1月を指定する場合は0を指定する
-	// date.setDate(18);
-
-	// 今日の時間を取得
-	const hours = date.getHours();
-
-	// 休薬期間の初期定義からの経過日数を計算
+// 服薬期間判定
+function isTakingPeriod(date) {
+	const startDate = new Date(2023, 10, 13); // 休薬期間開始日
 	const elapsedDays = Math.floor((date - startDate) / (1000 * 60 * 60 * 24));
-	// 経過日数を7で割り、小数点以下を切り捨て、何週目かを計算
 	const elapsedWeeks = Math.floor(elapsedDays / 7);
-	// [4の倍数（1を含む）週] ならば休薬期間、そうでなければ服薬期間
-	const isRestPeriod = (elapsedWeeks % 4) / 4 === 0 ? true : false;
+	return (elapsedWeeks % 4) / 4 !== 0; // 4の倍数週は休薬期間
+}
 
-	console.log("日時：" + date.toLocaleString());
-	console.log('初期定義からの経過日数:', elapsedDays);
-	console.log('初期定義からの経過週数:', elapsedWeeks);
-	console.log('ex.) 初期定義からの経過週数が0（日数:0~6）なら休薬期間、1（日数:7~13）なら服薬期間、2なら服薬期間、3なら服薬期間、4なら休薬期間');
-	console.log('isRestPeriod:', isRestPeriod);
-
-	// メッセージを定義
-	const dateMessage = '今日は' + date.getFullYear() + '年' + (date.getMonth() + 1) + '月' + date.getDate() + '日(' + dayList[date.getDay()] + ')、土浦の天気は' + getWeather('080020');
-	const restMessage = '【休薬期間】' + (elapsedDays % 7 + 1) + '日目'; //休薬期間の朝のメッセージ
-	const takingMessage = '【服薬期間】の' + (elapsedWeeks % 4) + '週目、' + (elapsedDays % 7 + 1) + '日目'; //服薬期間の朝のメッセージ
-	const takingMessage2 = 'もし昨日飲み忘れていた場合は、いま飲むようにしてください。'; //前日飲み忘れていた場合に今飲むように促すメッセージ
-	const reminderMessage = 'ピル飲んだ？'; //夜のリマインドメッセージ
-	const lastReminderMessage = 'これが最後のリマインドです！もうピル飲んだ？成否をこのメッセージにリアクションしてください。'; //寝る前のリマインドメッセージ
-
-	// 服薬期間の初日かどうかを判定するフラグ
-	let isTakingFirstDay = false;
-
-	// 服薬期間の初日かどうかを計算
-	if (!isRestPeriod && (elapsedDays - 7) % 28 === 0) {
-		isTakingFirstDay = true;
-	}
-	console.log('isTakingFirstDay:', isTakingFirstDay);
-
-	// 休薬期間で、時間が7時から9時の間なら、朝のメッセージを送信
-	if (isRestPeriod && hours >= 7 && hours <= 9) {
-		console.log("休薬期間で、時間が午前7時から9時の間なら、朝のメッセージを送信");
-		sendMessage(dateMessage);
-		sendMessage(restMessage);
-	}
-	// 服薬期間で、時間が7時から9時の間なら、朝のメッセージを送信
-	else if (!isRestPeriod && hours >= 7 && hours <= 9) {
-		console.log("服薬期間で、時間が午前7時から9時の間なら、朝のメッセージを送信");
-		sendMessage(dateMessage);
-		sendMessage(takingMessage);
-		// もし服薬期間の初日でないなら、前日飲み忘れていた場合に今飲むように促すメッセージを送信
-		if (!isTakingFirstDay) {
-			sendMessage(takingMessage2);
+function sendConfirmationMessage() {
+	const message = {
+		"type": "text",
+		"text": "もうピルを飲みましたか？",
+		"quickReply": {
+			"items": [
+				{
+					"type": "action",
+					"action": {
+						"type": "message",
+						"label": "はい",
+						"text": "はい"
+					}
+				},
+				{
+					"type": "action",
+					"action": {
+						"type": "message",
+						"label": "いいえ",
+						"text": "いいえ"
+					}
+				},
+				{
+					"type": "action",
+					"action": {
+						"type": "message",
+						"label": "家に忘れた",
+						"text": "家に忘れた"
+					}
+				}
+			]
 		}
-	}
-	// 服薬期間で、時間が21時から23時の間なら、夜のリマインドメッセージを送信
-	else if (!isRestPeriod && hours >= 22 && hours < 23) {
-		console.log("服薬期間で、時間が午後10時から11時の間なら、夜のリマインドメッセージを送信");
-		sendMessage(reminderMessage);
-	}
-	// 服薬期間で、時間が22時から24時の間なら、寝る前のリマインドメッセージを送信
-	else if (!isRestPeriod && hours >= 23 && hours <= 24) {
-		console.log("服薬期間で、時間が午後11時から12時の間なら、寝る前のリマインドメッセージを送信");
-		sendMessage(lastReminderMessage);
+	};
+
+	sendLineMessage(message);
+
+	// TIMEOUT_REMINDER_MINUTES分後に再通知するトリガーを設定（ユーザーからの返信がない場合のみ）
+	ScriptApp.newTrigger('sendReminderAgain')
+		.timeBased()
+		.after(TIMEOUT_REMINDER_MINUTES * 60 * 1000)
+		.create();
+}
+
+// LINE Message APIでメッセージを送信 (Reply API / Push API)
+function sendLineMessage(message, replyToken = null) {
+	const options = {
+		'method': 'post',
+		'headers': {
+			'Authorization': 'Bearer ' + messagingApiToken,
+			'Content-Type': 'application/json',
+		},
+		'payload': JSON.stringify({
+			'replyToken': replyToken, // Reply APIの場合はreplyTokenを指定
+			'to': groupId,
+			'messages': [message],
+		}),
+	};
+	const url = replyToken
+		? 'https://api.line.me/v2/bot/message/reply' // Reply APIのURL
+		: 'https://api.line.me/v2/bot/message/push'; // Push APIのURL
+	UrlFetchApp.fetch(url, options);
+}
+
+// TIMEOUT_REMINDER_MINUTES分後に再通知するトリガーを削除
+function deleteReminderAgainTrigger() {
+	const triggers = ScriptApp.getProjectTriggers();
+	for (let i = 0; i < triggers.length; i++) {
+		if (triggers[i].getHandlerFunction() === 'sendReminderAgain') {
+			ScriptApp.deleteTrigger(triggers[i]);
+			break;
+		}
 	}
 }
 
+function doPost(e) {
+	const events = JSON.parse(e.postData.contents).events;
+	for (const event of events) {
+		if (event.type === 'message' && event.message.type === 'text') {
+			const replyToken = event.replyToken; // Reply API用のトークンを取得
+			const userMessage = event.message.text;
+			if (userMessage === 'はい') {
+				sendLineMessage({
+					"type": "text",
+					"text": "偉いですね！飲み忘れずに続けましょう！"
+				}, replyToken); // Reply APIで送信
+				deleteReminderAgainTrigger(); // トリガーを削除
+			} else if (userMessage === 'いいえ') {
+				// 表示する時間を文字列に変換
+				const reminderTime = REMINDER_MINUTES + '分後';
+				sendLineMessage({
+					"type": "text",
+					"text": `${reminderTime}に再度リマインドしますね。`
+				}, replyToken); // Reply APIで送信
+				deleteReminderAgainTrigger(); // トリガーを削除
+				// REMINDER_MINUTES分後に再通知
+				ScriptApp.newTrigger('sendPillReminder')
+					.timeBased()
+					.after(REMINDER_MINUTES * 60 * 1000)
+					.create();
+			} else if (userMessage === '家に忘れた') {
+				sendLineMessage({
+					"type": "text",
+					"text": `確認します。飲み忘れに注意してくださいね。`
+				}, replyToken); // Reply APIで送信
+				deleteReminderAgainTrigger(); // トリガーを削除
+			} else {
+				// 表示する時間を文字列に変換
+				const reminderAgainTime = TIMEOUT_REMINDER_MINUTES + '分後';
+				sendLineMessage({
+					"type": "text",
+					"text": `はい、いいえ、家に忘れたのいずれかでお答えください。${reminderAgainTime}に再度リマインドしますね。`
+				}, replyToken); // Reply APIで送信
+			}
+		}
+	}
+}
+
+function sendReminderAgain() {
+	sendPillReminder();
+}
