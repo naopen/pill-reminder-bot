@@ -1,3 +1,4 @@
+// 以下のコードは全てGoogle Apps Scriptで実行する
 // LINE Notifyのアクセストークン
 const token = 'LINE Notifyのアクセストークンを入力';
 // LINE Notify APIのURL
