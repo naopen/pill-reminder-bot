@@ -104,7 +104,7 @@ function getWeather(code) {
 
 	// メッセージを定義
 	let weatherMessage = `${weather}、今日の最高気温は${maxTemp}℃、明日の最低気温は${minTemp}℃です。`;
-	weatherMessage += `降水確率は、6-12時 ${rain_12}％、12-18時 ${rain_18}％、18-24時 ${rain_24}％、24-30時 ${rain_30}％ です。`;
+	weatherMessage += `降水確率は、6-12時 ${rain_12}、12-18時 ${rain_18}、18-24時 ${rain_24}、24-30時 ${rain_30} です。`;
 
 	return weatherMessage;
 
@@ -187,7 +187,6 @@ function deleteReminderAgainTrigger() {
 	for (let i = 0; i < triggers.length; i++) {
 		if (triggers[i].getHandlerFunction() === 'sendReminderAgain') {
 			ScriptApp.deleteTrigger(triggers[i]);
-			break;
 		}
 	}
 }
