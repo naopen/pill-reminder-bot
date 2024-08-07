@@ -14,8 +14,6 @@ const groupId = 'LINEグループIDを入力';
 // const debugDate = new Date('2024-08-04T22:00:00'); // 服薬期間の場合
 const debugDate = null;
 
-// リマインドする時間（分）
-const REMINDER_MINUTES = 30;
 // 返信がない時に再度リマインドするまでの時間（分）
 const TIMEOUT_REMINDER_MINUTES = 20;
 
@@ -23,49 +21,49 @@ const TIMEOUT_REMINDER_MINUTES = 20;
 const dayList = ["日", "月", "火", "水", "木", "金", "土"];
 
 function sendMorningMessage() {
-	// 現在の時刻またはデバッグ用日時を取得
-	const now = debugDate || new Date();
+  // 現在の時刻またはデバッグ用日時を取得
+  const now = debugDate || new Date();
 
-	// メッセージを定義
-	const dateMessage = `今日は${now.getFullYear()}年${now.getMonth() + 1}月${now.getDate()}日(${dayList[now.getDay()]})、土浦の天気は${getWeather('080020')}`;
+  // メッセージを定義
+  const dateMessage = `今日は${now.getFullYear()}年${now.getMonth() + 1}月${now.getDate()}日(${dayList[now.getDay()]})、土浦の天気は${getWeather('080020')}`;
 
-	// 服薬期間判定
-	if (isTakingPeriod(now)) {
-		const elapsedDays = Math.floor((now - new Date(2023, 10, 13)) / (1000 * 60 * 60 * 24));
-		const elapsedWeeks = Math.floor(elapsedDays / 7);
-		const takingMessage = `【服薬期間】の${elapsedWeeks % 4}週目、${elapsedDays % 7 + 1}日目です。`;
-		sendLineNotify(dateMessage);
-		sendLineNotify(takingMessage);
-		// 服薬期間の初日でない場合は、追加メッセージを送信
-		if ((elapsedDays - 7) % 28 !== 0) {
-			const takingMessage2 = 'もし昨日飲み忘れていた場合は、いま飲むようにしてください。';
-			sendLineNotify(takingMessage2);
-		}
-	} else {
-		const elapsedDays = Math.floor((now - new Date(2023, 10, 13)) / (1000 * 60 * 60 * 24));
-		const restMessage = `【休薬期間】${elapsedDays % 7 + 1}日目です。`;
-		sendLineNotify(dateMessage);
-		sendLineNotify(restMessage);
-	}
+  // 服薬期間判定
+  if (isTakingPeriod(now)) {
+    const elapsedDays = Math.floor((now - new Date(2023, 10, 13)) / (1000 * 60 * 60 * 24));
+    const elapsedWeeks = Math.floor(elapsedDays / 7);
+    const takingMessage = `【服薬期間】の${elapsedWeeks % 4}週目、${elapsedDays % 7 + 1}日目です。`;
+    sendLineNotify(dateMessage);
+    sendLineNotify(takingMessage);
+    // 服薬期間の初日でない場合は、追加メッセージを送信
+    if ((elapsedDays - 7) % 28 !== 0) {
+      const takingMessage2 = 'もし昨日飲み忘れていた場合は、いま飲むようにしてください。';
+      sendLineNotify(takingMessage2);
+    }
+  } else {
+    const elapsedDays = Math.floor((now - new Date(2023, 10, 13)) / (1000 * 60 * 60 * 24));
+    const restMessage = `【休薬期間】${elapsedDays % 7 + 1}日目です。`;
+    sendLineNotify(dateMessage);
+    sendLineNotify(restMessage);
+  }
 }
 
 function sendPillReminder() {
-	// 現在の時刻またはデバッグ用日時を取得
-	const now = debugDate || new Date();
+  // 現在の時刻またはデバッグ用日時を取得
+  const now = debugDate || new Date();
 
-	// 服薬期間判定
-	if (!isTakingPeriod(now)) {
-		console.log("休薬期間のため、リマインドはスキップします。");
-		return;
-	}
+  // 服薬期間判定
+  if (!isTakingPeriod(now)) {
+    console.log("休薬期間のため、リマインドはスキップします。");
+    return;
+  }
 
-	// LINE Notifyでリマインドメッセージを送信
-	const message = 'ピルを飲む時間ですよ！';
-	sendLineNotify(message);
+  // LINE Notifyでリマインドメッセージを送信
+  const message = 'ピルを飲む時間ですよ！';
+  sendLineNotify(message);
 
-	// 3秒後に確認メッセージを送信
-	Utilities.sleep(3000); // 3秒待機
-	sendConfirmationMessage();
+  // 3秒後に確認メッセージを送信
+  Utilities.sleep(3000); // 3秒待機
+  sendConfirmationMessage();
 }
 
 // LINE Notifyでメッセージを送信
@@ -144,8 +142,8 @@ function sendConfirmationMessage() {
 					"type": "action",
 					"action": {
 						"type": "message",
-						"label": "家に忘れた",
-						"text": "家に忘れた"
+						"label": "今日は無理",
+						"text": "今日は無理"
 					}
 				}
 			]
@@ -159,6 +157,50 @@ function sendConfirmationMessage() {
 		.timeBased()
 		.after(TIMEOUT_REMINDER_MINUTES * 60 * 1000)
 		.create();
+}
+
+function askReminderMinutes(replyToken) {
+  const message = {
+    "type": "text",
+    "text": "再度リマインドですね！何分後にしますか？",
+    "quickReply": {
+      "items": [
+        {
+          "type": "action",
+          "action": {
+            "type": "message",
+            "label": "15分後",
+            "text": "15"
+          }
+        },
+        {
+          "type": "action",
+          "action": {
+            "type": "message",
+            "label": "30分後",
+            "text": "30"
+          }
+        },
+        {
+          "type": "action",
+          "action": {
+            "type": "message",
+            "label": "60分後",
+            "text": "60"
+          }
+        },
+        {
+          "type": "action",
+          "action": {
+            "type": "message",
+            "label": "90分後",
+            "text": "90"
+          }
+        }
+      ]
+    }
+  };
+  sendLineMessage(message, replyToken);
 }
 
 // LINE Message APIでメッセージを送信 (Reply API / Push API)
@@ -193,6 +235,7 @@ function deleteReminderAgainTrigger() {
 
 function doPost(e) {
 	const events = JSON.parse(e.postData.contents).events;
+
 	for (const event of events) {
 		if (event.type === 'message' && event.message.type === 'text') {
 			const replyToken = event.replyToken; // Reply API用のトークンを取得
@@ -202,32 +245,33 @@ function doPost(e) {
 					"type": "text",
 					"text": "偉いですね！飲み忘れずに続けましょう！"
 				}, replyToken); // Reply APIで送信
-				deleteReminderAgainTrigger(); // トリガーを削除
+        deleteReminderAgainTrigger(); // 既存の再通知トリガーを削除
 			} else if (userMessage === 'いいえ') {
-				// 表示する時間を文字列に変換
-				const reminderTime = REMINDER_MINUTES + '分後';
-				sendLineMessage({
-					"type": "text",
-					"text": `${reminderTime}に再度リマインドしますね。`
-				}, replyToken); // Reply APIで送信
-				deleteReminderAgainTrigger(); // トリガーを削除
-				// REMINDER_MINUTES分後に再通知
-				ScriptApp.newTrigger('sendPillReminder')
-					.timeBased()
-					.after(REMINDER_MINUTES * 60 * 1000)
-					.create();
-			} else if (userMessage === '家に忘れた') {
+				askReminderMinutes(replyToken); // 何分後にリマインドするか尋ねる
+			} else if (userMessage === '今日は無理') {
 				sendLineMessage({
 					"type": "text",
 					"text": `確認します。飲み忘れに注意してくださいね。`
 				}, replyToken); // Reply APIで送信
-				deleteReminderAgainTrigger(); // トリガーを削除
+        deleteReminderAgainTrigger(); // 既存の再通知トリガーを削除
+			} else if (userMessage.match(/^[0-9]+$/)) { // 数字のみのメッセージの場合
+				const minutes = parseInt(userMessage, 10);
+				sendLineMessage({
+					"type": "text",
+					"text": `${minutes}分後に再度リマインドしますね。`
+				}, replyToken); // Reply APIで送信
+				// minutes分後に再通知
+        deleteReminderAgainTrigger(); // 既存の再通知トリガーを削除
+				ScriptApp.newTrigger('sendReminderAgain')
+					.timeBased()
+					.after(minutes * 60 * 1000)
+					.create();
 			} else {
 				// 表示する時間を文字列に変換
 				const reminderAgainTime = TIMEOUT_REMINDER_MINUTES + '分後';
 				sendLineMessage({
 					"type": "text",
-					"text": `はい、いいえ、家に忘れたのいずれかでお答えください。${reminderAgainTime}に再度リマインドしますね。`
+					"text": `選択肢からボタンを押して回答してください。${reminderAgainTime}に再度リマインドしますね。`
 				}, replyToken); // Reply APIで送信
 			}
 		}
